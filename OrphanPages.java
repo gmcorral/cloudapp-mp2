@@ -12,14 +12,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import TopTitleStatistics.TextArrayWritable;
-import TopTitleStatistics.TitleCountMap;
-import TopTitleStatistics.TitleCountReduce;
-import TopTitleStatistics.TopTitlesStatMap;
-import TopTitleStatistics.TopTitlesStatReduce;
-
 import java.io.IOException;
-import java.util.Map;
 import java.util.StringTokenizer;
 
 // >>> Don't Change
