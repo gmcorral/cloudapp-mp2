@@ -57,18 +57,24 @@ public class OrphanPages extends Configured implements Tool {
 	        		String keyStr = line.substring(0, keySep);
                 	context.write(new IntWritable(Integer.parseInt(keyStr)), new IntWritable(0));
                 	
+                	line = line.substring(keySep + 1);
                 	StringTokenizer tokenizer = new StringTokenizer(line, " ");
     	            while (tokenizer.hasMoreTokens()) {
     	                String nextToken = tokenizer.nextToken().trim();
     	                try {
     	                	context.write(new IntWritable(Integer.parseInt(nextToken)), new IntWritable(1));
     	                } catch(NumberFormatException ignore) {
+    	                	System.err.println("Error parsing value: " + ignore.toString());
     	                }
     	            }
     	            
                 } catch(Exception ignore) {
+                	System.err.println("Error parsing key: " + ignore.toString());
                 }
+        	} else {
+        		System.err.println("Error parsing line " + line);
         	}
+        	
         }
     }
 
