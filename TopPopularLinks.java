@@ -95,40 +95,48 @@ public class TopPopularLinks extends Configured implements Tool {
     }
 
     public static class LinkCountMap extends Mapper<Object, Text, IntWritable, IntWritable> {
-    	String line = value.toString();
     	
-    	int keySep = line.indexOf(":");
-    	if(keySep > -1) {
-        	try {
-        		String keyStr = line.substring(0, keySep);
-            	context.write(new IntWritable(Integer.parseInt(keyStr)), new IntWritable(0));
-            	
-            	line = line.substring(keySep + 1);
-            	StringTokenizer tokenizer = new StringTokenizer(line, " ");
-	            while (tokenizer.hasMoreTokens()) {
-	                String nextToken = tokenizer.nextToken().trim();
-	                try {
-	                	context.write(new IntWritable(Integer.parseInt(nextToken)), new IntWritable(1));
-	                } catch(NumberFormatException ignore) {
-	                	System.err.println("Error parsing value: " + ignore.toString());
-	                }
+    	@Override
+        public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+	    	String line = value.toString();
+	    	
+	    	int keySep = line.indexOf(":");
+	    	if(keySep > -1) {
+	        	try {
+	        		String keyStr = line.substring(0, keySep);
+	            	context.write(new IntWritable(Integer.parseInt(keyStr)), new IntWritable(0));
+	            	
+	            	line = line.substring(keySep + 1);
+	            	StringTokenizer tokenizer = new StringTokenizer(line, " ");
+		            while (tokenizer.hasMoreTokens()) {
+		                String nextToken = tokenizer.nextToken().trim();
+		                try {
+		                	context.write(new IntWritable(Integer.parseInt(nextToken)), new IntWritable(1));
+		                } catch(NumberFormatException ignore) {
+		                	System.err.println("Error parsing value: " + ignore.toString());
+		                }
+		            }
+		            
+	            } catch(Exception ignore) {
+	            	System.err.println("Error parsing key: " + ignore.toString());
 	            }
-	            
-            } catch(Exception ignore) {
-            	System.err.println("Error parsing key: " + ignore.toString());
-            }
-    	} else {
-    		System.err.println("Error parsing line " + line);
+	    	} else {
+	    		System.err.println("Error parsing line " + line);
+	    	}
     	}
     }
 
     public static class LinkCountReduce extends Reducer<IntWritable, IntWritable, IntWritable, IntWritable> {
-    	int sum = 0;
     	
-        for (IntWritable val : values)
-            sum += val.get();
-        
-        context.write(key, new IntWritable(sum));
+    	@Override
+        public void reduce(IntWritable key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+	    	int sum = 0;
+	    	
+	        for (IntWritable val : values)
+	            sum += val.get();
+	        
+	        context.write(key, new IntWritable(sum));
+    	}
     }
 
     public static class TopLinksMap extends Mapper<Text, Text, NullWritable, IntArrayWritable> {
