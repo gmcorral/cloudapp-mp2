@@ -36,8 +36,8 @@ public class OrphanPages extends Configured implements Tool {
         jobA.setOutputKeyClass(IntWritable.class);
         jobA.setOutputValueClass(NullWritable.class);
 
-        job.setMapOutputKeyClass(IntWritable.class);
-        job.setMapOutputValueClass(IntWritable.class);
+        jobA.setMapOutputKeyClass(IntWritable.class);
+        jobA.setMapOutputValueClass(IntWritable.class);
         
         jobA.setMapperClass(LinkCountMap.class);
         jobA.setReducerClass(OrphanPageReduce.class);
