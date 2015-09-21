@@ -1,6 +1,7 @@
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -73,8 +74,6 @@ public class OrphanPages extends Configured implements Tool {
 
     public static class OrphanPageReduce extends Reducer<IntWritable, IntWritable, IntWritable, NullWritable> {
     	
-    	private static NullWritable nullWritable = new NullWritable();
-    	
         @Override
         public void reduce(IntWritable key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
         	int sum = 0;
@@ -82,7 +81,7 @@ public class OrphanPages extends Configured implements Tool {
             for (IntWritable val : values)
                 sum += val.get();
             if(sum == 0)
-            	context.write(key, nullWritable);
+            	context.write(key, NullWritable.get());
         }
     }
 }
