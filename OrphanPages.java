@@ -32,9 +32,13 @@ public class OrphanPages extends Configured implements Tool {
         FileSystem fs = FileSystem.get(conf);
 
         Job jobA = Job.getInstance(conf, "Orphan Pages");
+        
         jobA.setOutputKeyClass(IntWritable.class);
         jobA.setOutputValueClass(NullWritable.class);
 
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(IntWritable.class);
+        
         jobA.setMapperClass(LinkCountMap.class);
         jobA.setReducerClass(OrphanPageReduce.class);
 
