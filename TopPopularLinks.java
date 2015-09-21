@@ -70,7 +70,7 @@ public class TopPopularLinks extends Configured implements Tool {
         FileInputFormat.setInputPaths(jobA, new Path(args[0]));
         FileOutputFormat.setOutputPath(jobA, tmpPath);
 
-        jobA.setJarByClass(TopTitleStatistics.class);
+        jobA.setJarByClass(TopPopularLinks.class);
         jobA.waitForCompletion(true);
 
         Job jobB = Job.getInstance(conf, "Top Popular Links");
@@ -141,7 +141,7 @@ public class TopPopularLinks extends Configured implements Tool {
 
     public static class TopLinksMap extends Mapper<Text, Text, NullWritable, IntArrayWritable> {
         Integer N;
-        private TreeSet<APair<Integer, Integer>> linkMap = new TreeSet<APair<Integer, Integer>>();
+        private TreeSet<Pair<Integer, Integer>> linkMap = new TreeSet<Pair<Integer, Integer>>();
 
         @Override
         protected void setup(Context context) throws IOException,InterruptedException {
@@ -154,7 +154,7 @@ public class TopPopularLinks extends Configured implements Tool {
         	Integer count = Integer.parseInt(value.toString());
             Integer pageId = Integer.parseInt(key.toString());
 
-            linkMap.add(new APair<Integer, Integer>(count, pageId));
+            linkMap.add(new Pair<Integer, Integer>(count, pageId));
 
             if (linkMap.size() > this.N)
             	linkMap.remove(linkMap.first());
@@ -162,7 +162,7 @@ public class TopPopularLinks extends Configured implements Tool {
 
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
-        	for (APair<Integer, Integer> item : linkMap) {
+        	for (Pair<Integer, Integer> item : linkMap) {
                 Integer[] values = {item.second, item.first};
                 IntArrayWritable val = new IntArrayWritable(values);
                 context.write(NullWritable.get(), val);
@@ -172,7 +172,7 @@ public class TopPopularLinks extends Configured implements Tool {
 
     public static class TopLinksReduce extends Reducer<NullWritable, IntArrayWritable, IntWritable, IntWritable> {
         Integer N;
-        private TreeSet<APair<Integer, Integer>> linkMap = new TreeSet<APair<Integer, Integer>>();
+        private TreeSet<Pair<Integer, Integer>> linkMap = new TreeSet<Pair<Integer, Integer>>();
         
         @Override
         protected void setup(Context context) throws IOException,InterruptedException {
@@ -183,45 +183,45 @@ public class TopPopularLinks extends Configured implements Tool {
         @Override
         public void reduce(NullWritable key, Iterable<IntArrayWritable> values, Context context) throws IOException, InterruptedException {
         	for (IntArrayWritable val: values) {
-                Integer[] keyVal= (Integer[]) val.toArray();
+                Integer[] pair= (Integer[]) val.toArray();
 
-                Integer pageId = keyVal[0];
-                Integer count = keyVal[1];
+                Integer pageId = pair[0];
+                Integer count = pair[1];
 
-                linkMap.add(new APair<Integer, Integer>(count, pageId));
+                linkMap.add(new Pair<Integer, Integer>(count, pageId));
 
                 if (linkMap.size() > N) {
                 	linkMap.remove(linkMap.first());
                 }
             }
 
-            for (APair<Integer, Integer> item: linkMap)
+            for (Pair<Integer, Integer> item: linkMap)
                 context.write(new IntWritable(item.second), new IntWritable(item.first));
         }
     }
 }
 
 // >>> Don't Change
-class APair<A extends Comparable<? super A>,
+class Pair<A extends Comparable<? super A>,
         B extends Comparable<? super B>>
-        implements Comparable<APair<A, B>> {
+        implements Comparable<Pair<A, B>> {
 
     public final A first;
     public final B second;
 
-    public APair(A first, B second) {
+    public Pair(A first, B second) {
         this.first = first;
         this.second = second;
     }
 
     public static <A extends Comparable<? super A>,
             B extends Comparable<? super B>>
-    APair<A, B> of(A first, B second) {
-        return new APair<A, B>(first, second);
+    Pair<A, B> of(A first, B second) {
+        return new Pair<A, B>(first, second);
     }
 
     @Override
-    public int compareTo(APair<A, B> o) {
+    public int compareTo(Pair<A, B> o) {
         int cmp = o == null ? 1 : (this.first).compareTo(o.first);
         return cmp == 0 ? (this.second).compareTo(o.second) : cmp;
     }
@@ -237,12 +237,12 @@ class APair<A extends Comparable<? super A>,
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof APair))
+        if (!(obj instanceof Pair))
             return false;
         if (this == obj)
             return true;
-        return equal(first, ((APair<?, ?>) obj).first)
-                && equal(second, ((APair<?, ?>) obj).second);
+        return equal(first, ((Pair<?, ?>) obj).first)
+                && equal(second, ((Pair<?, ?>) obj).second);
     }
 
     private boolean equal(Object o1, Object o2) {
