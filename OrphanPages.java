@@ -12,7 +12,14 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import TopTitleStatistics.TextArrayWritable;
+import TopTitleStatistics.TitleCountMap;
+import TopTitleStatistics.TitleCountReduce;
+import TopTitleStatistics.TopTitlesStatMap;
+import TopTitleStatistics.TopTitlesStatReduce;
+
 import java.io.IOException;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 // >>> Don't Change
@@ -26,20 +33,63 @@ public class OrphanPages extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-        //TODO
+    	
+    	Configuration conf = this.getConf();
+        FileSystem fs = FileSystem.get(conf);
+
+        Job jobA = Job.getInstance(conf, "Orphan Pages");
+        jobA.setOutputKeyClass(IntWritable.class);
+        jobA.setOutputValueClass(NullWritable.class);
+
+        jobA.setMapperClass(LinkCountMap.class);
+        jobA.setReducerClass(OrphanPageReduce.class);
+
+        FileInputFormat.setInputPaths(jobA, new Path(args[0]));
+        FileOutputFormat.setOutputPath(jobA, new Path(args[1]));
+
+        jobA.setJarByClass(OrphanPages.class);
+        return jobA.waitForCompletion(true) ? 0 : 1;
     }
 
     public static class LinkCountMap extends Mapper<Object, Text, IntWritable, IntWritable> {
         @Override
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            //TODO
+        	
+        	String line = value.toString();
+        	
+        	int keySep = line.indexOf(":");
+        	if(keySep > -1) {
+	        	try {
+	        		String keyStr = line.substring(0, keySep);
+                	context.write(new IntWritable(Integer.parseInt(keyStr)), new IntWritable(0));
+                	
+                	StringTokenizer tokenizer = new StringTokenizer(line, " ");
+    	            while (tokenizer.hasMoreTokens()) {
+    	                String nextToken = tokenizer.nextToken().trim();
+    	                try {
+    	                	context.write(new IntWritable(Integer.parseInt(nextToken)), new IntWritable(1));
+    	                } catch(NumberFormatException ignore) {
+    	                }
+    	            }
+    	            
+                } catch(Exception ignore) {
+                }
+        	}
         }
     }
 
     public static class OrphanPageReduce extends Reducer<IntWritable, IntWritable, IntWritable, NullWritable> {
+    	
+    	private static NullWritable nullWritable = new NullWritable();
+    	
         @Override
         public void reduce(IntWritable key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-            //TODO
+        	int sum = 0;
+        	
+            for (IntWritable val : values)
+                sum += val.get();
+            if(sum == 0)
+            	context.write(key, nullWritable);
         }
     }
 }
