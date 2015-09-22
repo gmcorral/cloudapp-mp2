@@ -202,13 +202,19 @@ public class PopularityLeague extends Configured implements Tool {
                 linkMap.add(new Pair<Integer, Integer>(count, pageId));
             }
 
-        	int rank = -1;
-        	int previous = 0;
+        	int rank = 0;
+        	int previous = -1;
+        	int index = 0;
             for (Pair<Integer, Integer> item: linkMap) {
-            	if(item.first > previous || rank < 0)
-                	rank++;
-                context.write(new IntWritable(item.second), new IntWritable(rank));
+            	
+            	if(item.first > previous) {
+                	rank = index;
+            	}
+                
+            	context.write(new IntWritable(item.second), new IntWritable(rank));
+                
                 previous = item.first;
+                index++;
             }
         }
     }
